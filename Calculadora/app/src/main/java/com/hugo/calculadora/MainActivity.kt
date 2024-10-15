@@ -12,17 +12,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -46,19 +43,87 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+var operator : Char = ' '
+var number = mutableStateOf("0")
+var buffer : String  = ""
 
-@Composable
-fun Calculate() {
-    val number = remember { mutableFloatStateOf(0f) }
-    val operator = remember { mutableStateOf<Char>(' ') }
-    val result = remember { mutableFloatStateOf(0f) }
 
-    when (operator.value) {
-        '+' -> result.value = number.value + number.value
-        '-' -> result.value = number.value - number.value
-        '*' -> result.value = number.value * number.value
-        '/' -> result.value = number.value / number.value
+fun calculate(firstNumber: String, secondNumber: String): String {
+    var result = 0f
+    try {
+        firstNumber.toFloat()
+    } catch (e: NumberFormatException) {
+        return e.message.toString()
     }
+
+    try {
+        secondNumber.toFloat()
+    } catch (e: NumberFormatException) {
+        return e.message.toString()
+    }
+
+    val number1 = firstNumber.toFloat()
+    val number2 = secondNumber.toFloat()
+
+    if (buffer.isBlank()) {
+        return number.value
+    }
+
+    when (operator) {
+        '+' -> {
+            updateOperator(' ')
+            buffer = ""
+            result = number1 + number2
+            if (result % 1 == 0f) {
+                return result.toInt().toString()
+            }
+            return result.toString()
+        }
+        '-' -> {
+            updateOperator(' ')
+            buffer = ""
+            result = number1 - number2
+            if (result % 1 == 0f) {
+                return result.toInt().toString()
+            }
+            return result.toString()
+        }
+        '*' -> {
+            updateOperator(' ')
+            buffer = ""
+            result = number1 * number2
+            if (result % 1 == 0f) {
+                return result.toInt().toString()
+            }
+            return result.toString()
+        }
+        '/' -> {
+            updateOperator(' ')
+            buffer = ""
+            if (number2 == 0f) {
+                return "MATH ERROR"
+            }
+            result = number1 / number2
+            if (result % 1 == 0f) {
+                return result.toInt().toString()
+            }
+            return result.toString()
+        }
+        else -> {
+            buffer = ""
+            return number1.toString()
+        }
+    }
+}
+
+fun updateOperator(newOperator: Char) {
+    if (!(newOperator.isWhitespace()) && !(operator.isWhitespace()) && buffer.isNotBlank()) {
+        // Calculate
+        number.value = calculate(buffer, number.value)
+    }
+    operator = newOperator
+    buffer = number.value
+    number.value = "0"
 }
 
 fun updateNumber(number: String, newNumber: Char): String {
@@ -68,15 +133,16 @@ fun updateNumber(number: String, newNumber: Char): String {
         if (number.length == 1) return "0"
         return number.dropLast(1)
     }
-    if (newNumber == 'C') return "0"
+    if (newNumber == 'C') {
+        updateOperator(' ')
+        return "0"
+    }
     if (number == "0" && newNumber != '.') return newNumber.toString()
     return number + newNumber
 }
 
 @Composable
 fun Calc(modifier: Modifier = Modifier) {
-    var number = remember { mutableStateOf("0") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -127,205 +193,25 @@ fun Calc(modifier: Modifier = Modifier) {
                 Button(onClick = {number.value = updateNumber(number.value,'7')}, modifier = buttonModifier, colors = numberBtnColors) { Text("7") }
                 Button(onClick = {number.value = updateNumber(number.value,'8')}, modifier = buttonModifier, colors = numberBtnColors) { Text("8") }
                 Button(onClick = {number.value = updateNumber(number.value,'9')}, modifier = buttonModifier, colors = numberBtnColors) { Text("9") }
-                Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("/") }
+                Button(onClick = {updateOperator('/')}, modifier = buttonModifier, colors = operatorBtnColors) { Text("/") }
             }
             Row(modifier = Modifier.weight(0.5f)) {
                 Button(onClick = {number.value = updateNumber(number.value,'4')}, modifier = buttonModifier, colors = numberBtnColors) { Text("4") }
                 Button(onClick = {number.value = updateNumber(number.value,'5')}, modifier = buttonModifier, colors = numberBtnColors) { Text("5") }
                 Button(onClick = {number.value = updateNumber(number.value,'6')}, modifier = buttonModifier, colors = numberBtnColors) { Text("6") }
-                Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("*") }
+                Button(onClick = {updateOperator('*')}, modifier = buttonModifier, colors = operatorBtnColors) { Text("*") }
             }
             Row(modifier = Modifier.weight(0.5f)) {
                 Button(onClick = {number.value = updateNumber(number.value,'1')}, modifier = buttonModifier, colors = numberBtnColors) { Text("1") }
                 Button(onClick = {number.value = updateNumber(number.value,'2')}, modifier = buttonModifier, colors = numberBtnColors) { Text("2") }
                 Button(onClick = {number.value = updateNumber(number.value,'3')}, modifier = buttonModifier, colors = numberBtnColors) { Text("3") }
-                Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("-") }
+                Button(onClick = {updateOperator('-')}, modifier = buttonModifier, colors = operatorBtnColors) { Text("-") }
             }
             Row(modifier = Modifier.weight(0.5f)) {
                 Button(onClick = {number.value = updateNumber(number.value,'0')}, modifier = buttonModifier, colors = numberBtnColors) { Text("0") }
                 Button(onClick = {number.value = updateNumber(number.value,'.')}, modifier = buttonModifier, colors = numberBtnColors) { Text(".") }
-                Button(onClick = {}, modifier = buttonModifier, colors = numberBtnColors) { Text("=") }
-                Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("+") }
-            }
-        }
-    }
-}
-
-@Composable
-fun Calculadora(modifier: Modifier = Modifier) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(105,105,105))
-    )
-    {
-        Row(
-            Modifier
-                .padding(50.dp)
-        )
-        {
-            //MOSTRADOR
-            Column(
-                Modifier
-                    .padding(25.dp)
-                    .background(Color(51, 153, 102))
-                    .fillMaxWidth()
-            )
-            {
-                Text("NUMEROS PLACEHOLDER")
-            }
-        }
-        Row(
-            Modifier
-                .padding(40.dp)
-        )
-        {
-            //Linha 1
-            Row(
-                Modifier
-                    .padding(5.dp)
-            )
-            {
-                //MRC
-                Column()
-                {
-                    Text("MRC")
-                }
-                //M-
-                Column()
-                {
-                    Text("M-")
-                }
-                //M+
-                Column()
-                {
-                    Text("M+")
-                }
-                //ON C
-                Column()
-                {
-                    Text("ON/C")
-                }
-            }
-            //Linha 2
-            Row()
-            {
-                //RAIZ
-                Column()
-                {
-                    Text("RAIZ")
-                }
-                //%
-                Column()
-                {
-                    Text("%")
-                }
-                //+-
-                Column()
-                {
-                    Text("+/-")
-                }
-                //CE
-                Column()
-                {
-                    Text("CE")
-                }
-            }
-            //Linha 3
-            Row()
-            {
-                //7
-                Column()
-                {
-                    Text("7")
-                }
-                //8
-                Column()
-                {
-                    Text("8")
-                }
-                //9
-                Column()
-                {
-                    Text("9")
-                }
-                // DIVIDIR
-                Column()
-                {
-                    Text("/")
-                }
-            }
-            //Linha 4
-            Row()
-            {
-                //4
-                Column()
-                {
-                    Text("4")
-                }
-                //5
-                Column()
-                {
-                    Text("5")
-                }
-                //6
-                Column()
-                {
-                    Text("6")
-                }
-                //*
-                Column()
-                {
-                    Text("*")
-                }
-            }
-            //Linha 5
-            Row()
-            {
-                //1
-                Column()
-                {
-                    Text("1")
-                }
-                //2
-                Column()
-                {
-                    Text("2")
-                }
-                //3
-                Column()
-                {
-                    Text("3")
-                }
-                //-
-                Column()
-                {
-                    Text("-")
-                }
-            }
-            //Linha 6
-            Row()
-            {
-                //0
-                Column()
-                {
-                    Text("0")
-                }
-                //.
-                Column()
-                {
-                    Text(".")
-                }
-                //=
-                Column()
-                {
-                    Text("=")
-                }
-                //+
-                Column()
-                {
-                    Text("+")
-                }
+                Button(onClick = {number.value = calculate(buffer, number.value)}, modifier = buttonModifier, colors = numberBtnColors) { Text("=") }
+                Button(onClick = {updateOperator('+')}, modifier = buttonModifier, colors = operatorBtnColors) { Text("+") }
             }
         }
     }
