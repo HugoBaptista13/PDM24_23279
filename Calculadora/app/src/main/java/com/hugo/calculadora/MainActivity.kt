@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hugo.calculadora.ui.theme.CalculadoraTheme
+import kotlin.math.sqrt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,71 +50,66 @@ var buffer : String  = ""
 
 
 fun calculate(firstNumber: String, secondNumber: String): String {
-    var result = 0f
-    try {
-        firstNumber.toFloat()
-    } catch (e: NumberFormatException) {
-        return e.message.toString()
-    }
+    val result : Double
+    if (buffer.isBlank()) return number.value
 
-    try {
-        secondNumber.toFloat()
-    } catch (e: NumberFormatException) {
-        return e.message.toString()
-    }
+    try { firstNumber.toDouble() } catch (e: NumberFormatException) { return e.message.toString() }
+    try { secondNumber.toDouble() } catch (e: NumberFormatException) { return e.message.toString() }
 
-    val number1 = firstNumber.toFloat()
-    val number2 = secondNumber.toFloat()
-
-    if (buffer.isBlank()) {
-        return number.value
-    }
+    val number1 = firstNumber.toDouble()
+    val number2 = secondNumber.toDouble()
 
     when (operator) {
         '+' -> {
             updateOperator(' ')
             buffer = ""
             result = number1 + number2
-            if (result % 1 == 0f) {
-                return result.toInt().toString()
-            }
+            if (result % 1 == 0.0) return result.toInt().toString()
             return result.toString()
         }
         '-' -> {
             updateOperator(' ')
             buffer = ""
             result = number1 - number2
-            if (result % 1 == 0f) {
-                return result.toInt().toString()
-            }
+            if (result % 1 == 0.0) return result.toInt().toString()
             return result.toString()
         }
         '*' -> {
             updateOperator(' ')
             buffer = ""
             result = number1 * number2
-            if (result % 1 == 0f) {
-                return result.toInt().toString()
-            }
+            if (result % 1 == 0.0) return result.toInt().toString()
             return result.toString()
         }
         '/' -> {
             updateOperator(' ')
             buffer = ""
-            if (number2 == 0f) {
-                return "MATH ERROR"
-            }
+            if (number2 == 0.0) return "MATH ERROR"
             result = number1 / number2
-            if (result % 1 == 0f) {
-                return result.toInt().toString()
-            }
+            if (result % 1 == 0.0) return result.toInt().toString()
             return result.toString()
         }
         else -> {
             buffer = ""
-            return number1.toString()
+            return number2.toString()
         }
     }
+}
+
+fun sqrtNumber(number: String): String {
+    if (number == "0") return number
+    if (number.startsWith('-')) return "MATH ERROR"
+    try { number.toDouble() } catch (e: NumberFormatException) { return e.message.toString() }
+
+    val result : Double = sqrt(number.toDouble())
+    if (result % 1 == 0.0) return result.toInt().toString()
+    return result.toString()
+}
+
+fun negateNumber(number: String): String {
+    if (number == "0") return number
+    if (number.startsWith('-')) return number.drop(1)
+    return "-$number"
 }
 
 fun updateOperator(newOperator: Char) {
@@ -184,9 +180,9 @@ fun Calc(modifier: Modifier = Modifier) {
                 Button(onClick = {number.value = updateNumber(number.value,'C')}, modifier = buttonModifier, colors = clearBtnColors) { Text("ON/C") }
             }
             Row(modifier = Modifier.weight(1f)) {
-                Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("√") }
+                Button(onClick = {number.value = sqrtNumber(number.value) }, modifier = buttonModifier, colors = operatorBtnColors) { Text("√") }
                 Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("%") }
-                Button(onClick = {}, modifier = buttonModifier, colors = operatorBtnColors) { Text("+/-") }
+                Button(onClick = {number.value = negateNumber(number.value)}, modifier = buttonModifier, colors = operatorBtnColors) { Text("+/-") }
                 Button(onClick = {number.value = updateNumber(number.value,'E')}, modifier = buttonModifier, colors = clearBtnColors) { Text("CE") }
             }
             Row(modifier = Modifier.weight(0.5f)) {
